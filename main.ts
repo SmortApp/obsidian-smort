@@ -33,7 +33,6 @@ export default class Smort extends Plugin {
 		const urlObj = new URL(url);
 		const articleId = urlObj.pathname.slice(1);
 		const apiURL = `https://smort.io/api/article?uuid=${articleId}&markup=markdown`;
-		// https://smort.io/f99f6422-8211-486d-b59c-1ce02f040d49
 		var body = "";
 		const request = electron.remote.net.request({
 			url: apiURL,

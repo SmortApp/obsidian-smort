@@ -1,10 +1,10 @@
 {
 	"id": "smort-obsidian",
 	"name": "Smort",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "0.12.0",
 	"description": "Add Smort.io articles to Obsidian. Smort.io lets you easily edit, annotate and share articles.",
 	"author": "Smort",
 	"authorUrl": "https://smort.io",
-	"isDesktopOnly": true
+	"isDesktopOnly": false
 }

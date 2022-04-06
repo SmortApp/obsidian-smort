@@ -6,13 +6,19 @@ import {
 	Modal,
 	Notice,
 	Plugin,
+	requestUrl,
 	TextComponent,
 } from "obsidian";
 // @ts-ignore
 import smortLogo from "./SmortLogo.svg";
 // @ts-ignore
-import electron from "electron";
+import { version as uuidVersion } from "uuid";
+// @ts-ignore
+import { validate as uuidValidate } from "uuid";
 
+function uuidValidateV4(uuid: string) {
+	return uuidValidate(uuid) && uuidVersion(uuid) === 4;
+}
 export default class Smort extends Plugin {
 	async onload() {
 		this.addCommand({
@@ -30,32 +36,32 @@ export default class Smort extends Plugin {
 			console.error("[Smort] No active view to insert into.");
 			return;
 		}
-		const urlObj = new URL(url);
+		let urlObj;
+		try {
+			urlObj = new URL(url);
+		} catch (e) {
+			new Notice("[Smort] Error: Invalid URL provided", 5000);
+			return;
+		}
 		const articleId = urlObj.pathname.slice(1);
-		const apiURL = `https://smort.io/api/article?uuid=${articleId}&markup=markdown`;
-		var body = "";
-		const request = electron.remote.net.request({
+		if (!uuidValidateV4(articleId)) {
+			new Notice("[Smort] Error: Invalid article ID", 5000);
+			return;
+		}
+		const apiURL = `https://www.smort.io/api/article?uuid=${articleId}&markup=markdown`;
+		requestUrl({
 			url: apiURL,
-		});
-		request.setHeader("Accept", "application/json");
-		request.on("response", (response: any) => {
-			response.on("end", () => {
-				if (body && body.length > 0) {
-					this.addMarkdown(body);
-				} else {
-					console.error(
-						`[Smort] Unable to fetch Markdown from ${apiURL}`
-					);
+			method: "GET",
+			headers: { Accept: "application/json" },
+		})
+			.then((response) => {
+				if (response.status !== 200) {
+					new Notice(`[Smort] Error: ${response.status}`, 5000);
+					return;
 				}
-			});
-			response.on("error", () => {
-				console.error(`[Smort] Error fetching Markdown ${apiURL}`);
-			});
-			response.on("data", (chunk: any) => {
-				body += chunk;
-			});
-		});
-		request.end();
+				this.addMarkdown(response.text);
+			})
+			.catch((error) => new Notice("[Smort] Error: " + error, 5000));
 	}
 
 	async addMarkdown(md: string) {
